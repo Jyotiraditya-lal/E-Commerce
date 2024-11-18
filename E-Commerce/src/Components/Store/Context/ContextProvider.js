@@ -1,115 +1,105 @@
-import React,{useState,useContext, useEffect} from "react";
+import React, { useState, useContext, useEffect } from "react";
 import Context from "./context";
 import LoginContext from "../../Login/Context/login-context";
 
+const ContextProvider = (props) => {
+  const ctx = useContext(LoginContext);
 
-const ContextProvider=  (props)=>{
+  const [ItemState, setItemState] = useState([]);
+  const uId = ctx.UID;
 
-    const ctx=useContext(LoginContext)
-    
+  useEffect(() => {
+    const fetchItems = async () => {
+      const response = await fetch(
+        `https://react-http-333ab-default-rtdb.asia-southeast1.firebasedatabase.app/Cart/${uId}.json`
+      );
+      const data = await response.json();
 
-    const [ItemState,setItemState]=useState([])
+      const LoadedItems = [];
 
-    const uId = ctx.UID
-
-    
-
-    fetch(`https://react-http-333ab-default-rtdb.asia-southeast1.firebasedatabase.app/Cart/${uId}.json`).then((res)=>{ 
-        
-      const data= res.json();
-      console.log(data) 
-
-      const LoadedItems=[]
-
-      for( const key in data){
-        LoadedItems.push({
-          Tokenid: key,
-          title: data[key].title,
-          amount: data[key].amount,
-          price: data[key].price,
-          id: data[key].id,
-          imageUrl: data[key].imageUrl
-        })
+      for (const key in data) {
+        const item = data[key];
+        if (
+          item &&
+          item.title &&
+          item.amount != null &&
+          item.price != null &&
+          item.id &&
+          item.imageUrl
+        ) {
+          LoadedItems.push({
+            Tokenid: key,
+            title: item.title,
+            amount: item.amount,
+            price: item.price,
+            id: item.id,
+            imageUrl: item.imageUrl,
+          });
+        }
       }
-      console.log(LoadedItems)
-      if(LoadedItems.length>0){
-      setItemState([...LoadedItems])}
-    })
-    
 
-    const AddItemHandler= async (item)=>{
+      if (LoadedItems.length > 0) {
+        setItemState([...LoadedItems]);
+      }
+    };
 
-        const itemID=ItemState.map(itm=>itm.id)
+    fetchItems();
+  }, [uId]);
 
+  const AddItemHandler = async (item) => {
+    const itemID = ItemState.map((itm) => itm.id);
 
-
-        
-
-        if(ItemState.length>0){
-
-            if(itemID.includes(item.id)){
-
-              for(let i=0;i<ItemState.length;i++){
-                 if(ItemState[i].id===item.id){
-                    ItemState[i].amount++
-                    break;
-                   }   
-                }
-            }
-            else{
-                setItemState([...ItemState,item])
-            }
-        }
-        else{
-            setItemState([...ItemState,item])
-        }
-
-        fetch(`https://react-http-333ab-default-rtdb.asia-southeast1.firebasedatabase.app/Cart/${uId}/${item.id}.json`,{
-            method: 'POST',
-            body: JSON.stringify(item)
-        })
-
-        
-        
-         
+    if (ItemState.length > 0) {
+      if (itemID.includes(item.id)) {
+        const updatedItems = ItemState.map((itm) =>
+          itm.id === item.id ? { ...itm, amount: itm.amount + 1 } : itm
+        );
+        setItemState(updatedItems);
+      } else {
+        setItemState((prevState) => [...prevState, item]);
+      }
+    } else {
+      setItemState([item]);
     }
 
-    const RemoveItemHandler=(id)=>{
-        for(let i=0;i<ItemState.length;i++){
-            if(ItemState[i].id===id){
-             if(ItemState[i].amount>1){
-                 ItemState[i].amount--
-                 setItemState([...ItemState])
-             }
-             else if(ItemState[i].amount===1){
-                 ItemState.splice(i,1)
-                 setItemState([...ItemState])
-             }
-            }
-         }
-         fetch(`https://react-http-333ab-default-rtdb.asia-southeast1.firebasedatabase.app/Cart/${uId}/${id}.json`,{
-            method: 'DELETE',
-        })
-    }
+    await fetch(
+      `https://react-http-333ab-default-rtdb.asia-southeast1.firebasedatabase.app/Cart/${uId}/${item.id}.json`,
+      {
+        method: "POST",
+        body: JSON.stringify(item),
+      }
+    );
+  };
 
-    const PurchaseHandler=()=>{
-        const message='Purchase successful'
-        alert(message)
-        setItemState([])
-    }
+  const RemoveItemHandler = async (id) => {
+    const updatedItems = ItemState.map((itm) =>
+      itm.id === id ? { ...itm, amount: itm.amount - 1 } : itm
+    ).filter((itm) => itm.amount > 0);
+    setItemState(updatedItems);
 
-    const CartContext={
-        items:ItemState,
-        AddItems: AddItemHandler,
-        RemoveItems: RemoveItemHandler,
-        purchase: PurchaseHandler
-    }
+    await fetch(
+      `https://react-http-333ab-default-rtdb.asia-southeast1.firebasedatabase.app/Cart/${uId}/${id}.json`,
+      {
+        method: "DELETE",
+      }
+    );
+  };
 
-    return(
-        <Context.Provider value={CartContext}>
-            {props.children}
-        </Context.Provider>
-    )
-}
+  const PurchaseHandler = () => {
+    alert("Purchase successful");
+    setItemState([]);
+  };
 
-export default ContextProvider
+  const CartContext = {
+    items: ItemState,
+    AddItems: AddItemHandler,
+    RemoveItems: RemoveItemHandler,
+    purchase: PurchaseHandler,
+  };
+
+  return (
+    <Context.Provider value={CartContext}>{props.children}</Context.Provider>
+  );
+};
+
+export default ContextProvider;
