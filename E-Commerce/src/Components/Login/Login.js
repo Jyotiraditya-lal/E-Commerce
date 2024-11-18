@@ -15,17 +15,17 @@ const Login=()=>{
     <React.Fragment>
       <Navbar bg="dark" expand="sm" variant="dark">
         <Container>
-            <NavLink style={{color: 'white'}} to="/">Home</NavLink>
-            {ctx.isLoggedin && <NavLink style={{color: 'white'}} to="/Store">Shop</NavLink>}
-            <NavLink style={{color: 'white'}} to="/About">About Us</NavLink>
-            <NavLink style={{color: 'white'}} to="/ContactUs">Contact Us</NavLink>
-            <NavLink style={{color: 'white'}} to="/login">{ctx.isLoggedin ? 'Logout' : 'login'}</NavLink>
+            <NavLink style={{color: 'white', textDecoration: 'none'}} to="/">Home</NavLink>
+            {ctx.isLoggedin && <NavLink style={{color: 'white', textDecoration: 'none'}} to="/Store">Shop</NavLink>}
+            <NavLink style={{color: 'white', textDecoration: 'none'}} to="/About">About Us</NavLink>
+            <NavLink style={{color: 'white', textDecoration: 'none'}} to="/ContactUs">Contact Us</NavLink>
+            <NavLink style={{color: 'white', textDecoration: 'none'}} to="/login">{ctx.isLoggedin ? 'Logout' : 'login'}</NavLink>
         </Container>
       </Navbar>
       <Navbar bg="secondary" variant="dark" className="mb-3" >
-        <Container style={{height: "15rem"}}>
-          <h2 className="center-navbar">The Generics</h2>
-        </Container>
+      <div style={{height: "15rem"}}>
+          <h2 className="center-navbar" style={{marginLeft: '30rem',marginTop:'3rem'}}>The Generics</h2>
+        </div>
       </Navbar>
       <LoginForm />
     </React.Fragment>
